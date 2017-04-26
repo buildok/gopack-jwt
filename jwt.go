@@ -26,7 +26,10 @@ func New(key string) *JWT {
 		alg: "HS256",
 		typ: "JWT",
 	}
-	res, _ := json.Marshal(hdr)
+	res, err := json.Marshal(hdr)
+	if err != nil {
+		res = err.Error()
+	}
 	jwt.hdr = string(res)
 
 	return jwt
