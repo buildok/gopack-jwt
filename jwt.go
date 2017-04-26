@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	// "encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -15,60 +14,64 @@ type header struct {
 	Typ string `json:"typ"`
 }
 
-type JWT struct {
-	Key string `json:"key"`
-	Hdr []byte `json:"hdr"`
+type payload struct {
 }
 
-func New(key string) *JWT {
+type JWT struct {
+	Key []byte
+	Hdr header
+}
+
+func New(key []byte) *JWT {
 	jwt := new(JWT)
 	jwt.Key = key
-
-	hdr := header{
-		Alg: "HS256",
-		Typ: "JWT",
-	}
-	res, err := json.Marshal(hdr)
-	if err != nil {
-
-	}
-	jwt.Hdr = res
+	jwt.Hdr = header{Alg: "HS256", Typ: "JWT"}
 
 	return jwt
 }
 
-func (j *JWT) Encode(payload interface{}) string {
-	seg := base64.URLEncoding.EncodeToString(j.Hdr)
+func (j *JWT) Encode(payload interface{}) (string, error) {
+	h, err := json.Marshal(j.Hdr)
+	seg := base64.URLEncoding.EncodeToString(h)
 
 	p, err := json.Marshal(payload)
 	if err != nil {
-
+		return "", err
 	}
 	seg2 := base64.URLEncoding.EncodeToString(p)
 
 	msg := seg + "." + seg2
-	sign := hmac.New(sha256.New, []byte(j.Key))
+	sign := hmac.New(sha256.New, j.Key)
 	sign.Write([]byte(msg))
 
-	ret := msg + "." + base64.URLEncoding.EncodeToString(sign.Sum(nil))
-	return ret
+	token := msg + "." + base64.URLEncoding.EncodeToString(sign.Sum(nil))
+
+	return token, nil
+}
+
+func (j *JWT) Decode(token []byte) {
+
 }
 
 // /////////////////////////////////////////////
 
-type Payload struct {
+type Model struct {
 	Id   int
 	Name string
 }
 
 func main() {
 	// jwt := jwt.New("secret")
-	jwt := New("secret")
+	jwt := New([]byte("secret"))
 
-	// fmt.Printf("%#v\n", jwt)
-	p := Payload{
+	p := Model{
 		Id:   1,
-		Name: "qqq",
+		Name: "username",
 	}
-	fmt.Printf("%s\n", jwt.Encode(p))
+
+	token, err := jwt.Encode(p)
+	if err != nil {
+		fmt.Printf("%s", err.Error())
+	}
+	fmt.Printf("%s\n", token)
 }
