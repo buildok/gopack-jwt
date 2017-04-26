@@ -28,7 +28,7 @@ func New(key string) *JWT {
 	}
 	res, err := json.Marshal(hdr)
 	if err != nil {
-		res = err.Error()
+		res = []byte(err.Error())
 	}
 	jwt.hdr = string(res)
 
