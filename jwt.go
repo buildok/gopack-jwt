@@ -9,13 +9,13 @@ func Hello() string {
 }
 
 type header struct {
-	Alg string `json: "alg"`
-	Typ string `json: "typ"`
+	Alg string `json:"alg"`
+	Typ string `json:"typ"`
 }
 
 type JWT struct {
-	Key string `json: "key"`
-	Hdr string `json: "hdr"`
+	Key string `json:"key"`
+	Hdr string `json:"hdr"`
 }
 
 func New(key string) *JWT {
