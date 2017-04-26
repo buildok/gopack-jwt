@@ -15,7 +15,7 @@ type header struct {
 
 type JWT struct {
 	Key string `json:"key"`
-	Hdr string `json:"hdr"`
+	Hdr []byte `json:"hdr"`
 }
 
 func New(key string) *JWT {
@@ -28,9 +28,9 @@ func New(key string) *JWT {
 	}
 	res, err := json.Marshal(hdr)
 	if err != nil {
-		res = []byte(err.Error())
+
 	}
-	jwt.Hdr = string(res)
+	jwt.Hdr = res
 
 	return jwt
 }
