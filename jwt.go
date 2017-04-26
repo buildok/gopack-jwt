@@ -9,28 +9,28 @@ func Hello() string {
 }
 
 type header struct {
-	alg string
-	typ string
+	Alg string `json: "alg"`
+	Typ string `json: "typ"`
 }
 
 type JWT struct {
-	key string
-	hdr string
+	Key string `json: "key"`
+	Hdr string `json: "hdr"`
 }
 
 func New(key string) *JWT {
 	jwt := new(JWT)
-	jwt.key = key
+	jwt.Key = key
 
 	hdr := header{
-		alg: "HS256",
-		typ: "JWT",
+		Alg: "HS256",
+		Typ: "JWT",
 	}
 	res, err := json.Marshal(hdr)
 	if err != nil {
 		res = []byte(err.Error())
 	}
-	jwt.hdr = string(res)
+	jwt.Hdr = string(res)
 
 	return jwt
 }
