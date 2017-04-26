@@ -19,7 +19,7 @@ type JWT struct {
 }
 
 func New(key string) *JWT {
-	jwt = new(JWT)
+	jwt := new(JWT)
 	jwt.key = key
 
 	hdr := header{
