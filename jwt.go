@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type header struct {
@@ -31,20 +32,22 @@ func New(key []byte) *JWT {
 }
 
 func (j *JWT) Encode(payload interface{}) (string, error) {
-	h, err := json.Marshal(j.Hdr)
-	seg := base64.URLEncoding.EncodeToString(h)
+	var segs []string
+
+	h, _ := json.Marshal(j.Hdr)
+	segs = append(segs, base64.URLEncoding.EncodeToString(h))
 
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
 	}
-	seg2 := base64.URLEncoding.EncodeToString(p)
+	segs = append(segs, base64.URLEncoding.EncodeToString(p))
 
-	msg := seg + "." + seg2
 	sign := hmac.New(sha256.New, j.Key)
-	sign.Write([]byte(msg))
+	sign.Write([]byte(strings.Join(segs, ".")))
 
-	token := msg + "." + base64.URLEncoding.EncodeToString(sign.Sum(nil))
+	segs = append(segs, base64.URLEncoding.EncodeToString(sign.Sum(nil)))
+	token := strings.Join(segs, ".")
 
 	return token, nil
 }
