@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	// "time"
 )
 
 type header struct {
@@ -15,45 +16,65 @@ type header struct {
 	Typ string `json:"typ"`
 }
 
-type payload struct {
-}
-
 type JWT struct {
-	Key []byte
-	Hdr header
+	Key      []byte
+	Segments [3]string
 }
 
-func New(key []byte) *JWT {
-	jwt := new(JWT)
-	jwt.Key = key
-	jwt.Hdr = header{Alg: "HS256", Typ: "JWT"}
+func New(key string) *JWT {
+	j := new(JWT)
+	j.Key = []byte(key)
 
-	return jwt
+	h, _ := json.Marshal(header{Alg: "HS256", Typ: "JWT"})
+	j.Segments[0] = base64.StdEncoding.EncodeToString(h)
+
+	return j
 }
 
 func (j *JWT) Encode(payload interface{}) (string, error) {
-	var segs []string
-
-	h, _ := json.Marshal(j.Hdr)
-	segs = append(segs, base64.URLEncoding.EncodeToString(h))
-
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
 	}
-	segs = append(segs, base64.URLEncoding.EncodeToString(p))
+	j.Segments[1] = base64.StdEncoding.EncodeToString(p)
 
 	sign := hmac.New(sha256.New, j.Key)
-	sign.Write([]byte(strings.Join(segs, ".")))
+	sign.Write([]byte(strings.Join(j.Segments[:2], ".")))
 
-	segs = append(segs, base64.URLEncoding.EncodeToString(sign.Sum(nil)))
-	token := strings.Join(segs, ".")
+	j.Segments[2] = base64.StdEncoding.EncodeToString(sign.Sum(nil))
 
-	return token, nil
+	return strings.Join(j.Segments[:], "."), nil
 }
 
-func (j *JWT) Decode(token []byte) {
+func (j *JWT) Decode(payload interface{}, token string) error {
+	segs := strings.Split(token, ".")
 
+	p, err := base64.StdEncoding.DecodeString(segs[1])
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(p, payload)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (j *JWT) Validate(payload interface{}, token string) (bool, error) {
+	enc_p, err := j.Encode(payload)
+	if err != nil {
+		return false, err
+	}
+
+	mac1 := []byte(strings.Split(enc_p, ".")[2])
+	mac2 := []byte(strings.Split(token, ".")[2])
+
+	if !hmac.Equal(mac1, mac2) {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // /////////////////////////////////////////////
@@ -65,7 +86,7 @@ type Model struct {
 
 func main() {
 	// jwt := jwt.New("secret")
-	jwt := New([]byte("secret"))
+	jwt := New("secret")
 
 	p := Model{
 		Id:   1,
@@ -77,4 +98,17 @@ func main() {
 		fmt.Printf("%s", err.Error())
 	}
 	fmt.Printf("%s\n", token)
+
+	m := new(Model)
+	if jwt.Decode(m, token) != nil {
+		fmt.Printf("%s", err.Error())
+	}
+	fmt.Printf("model\t%v\n", m)
+
+	ok, err := jwt.Validate(m, token)
+	if err != nil {
+		fmt.Printf("%s", err.Error())
+	}
+
+	fmt.Printf("result\t%v\n", ok)
 }
