@@ -1,7 +1,7 @@
 # jwt
 Golang package for JWT encode/decode
 
-Getting
+
 ```bash
 go get github.com/buildok/jwt
 ```
@@ -47,7 +47,7 @@ func main() {
 
 ```
 
-Output:
+output:
 ```bash
 token:  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6MSwiTmFtZSI6InVzZXJuYW1lIn0=.1nWSFwxdnI1ur2AIE4Si/McfBaiMf8pA5kk/K02SJl0=
 data:   &main.Model{Id:1, Name:"username"}
