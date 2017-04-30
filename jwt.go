@@ -1,26 +1,49 @@
-// package jwt
-package main
+/**
+ * Simple encoding/decoding JSON Web Token
+ * Support HS256
+ * RFC 7519
+ */
+
+package jwt
 
 import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"strings"
-	// "time"
 )
 
+/**
+ * JWT header
+ */
 type header struct {
 	Alg string `json:"alg"`
 	Typ string `json:"typ"`
 }
 
+/**
+ * JWT claims
+ */
+type Claims struct {
+	Iss string
+	Sub string
+	Aud string
+	Exp int
+	Nbf int
+	Iat int
+	Jti string
+}
+
 type JWT struct {
 	Key      []byte
 	Segments [3]string
+	Claims
 }
 
+/**
+ * Create new encoder/decoder.
+ */
 func New(key string) *JWT {
 	j := new(JWT)
 	j.Key = []byte(key)
@@ -31,6 +54,9 @@ func New(key string) *JWT {
 	return j
 }
 
+/**
+ * Return JWT token
+ */
 func (j *JWT) Encode(payload interface{}) (string, error) {
 	p, err := json.Marshal(payload)
 	if err != nil {
@@ -46,6 +72,9 @@ func (j *JWT) Encode(payload interface{}) (string, error) {
 	return strings.Join(j.Segments[:], "."), nil
 }
 
+/**
+ * Decode data from token to payload
+ */
 func (j *JWT) Decode(payload interface{}, token string) error {
 	segs := strings.Split(token, ".")
 
@@ -58,9 +87,36 @@ func (j *JWT) Decode(payload interface{}, token string) error {
 		return err
 	}
 
+	var fields map[string]interface{}
+	json.Unmarshal(p, &fields)
+
+	for i, v := range fields {
+		switch i {
+
+		case "iss":
+			j.Iss = v.(string)
+		case "sub":
+			j.Sub = v.(string)
+		case "aud":
+			j.Aud = v.(string)
+		case "exp":
+			j.Exp = v.(int)
+		case "nbf":
+			j.Nbf = v.(int)
+		case "iat":
+			j.Iat = v.(int)
+		case "jti":
+			j.Jti = v.(string)
+
+		}
+	}
+
 	return nil
 }
 
+/**
+ * Validate payload data
+ */
 func (j *JWT) Validate(payload interface{}, token string) (bool, error) {
 	enc_p, err := j.Encode(payload)
 	if err != nil {
@@ -75,40 +131,4 @@ func (j *JWT) Validate(payload interface{}, token string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// /////////////////////////////////////////////
-
-type Model struct {
-	Id   int
-	Name string
-}
-
-func main() {
-	// jwt := jwt.New("secret")
-	jwt := New("secret")
-
-	p := Model{
-		Id:   1,
-		Name: "username",
-	}
-
-	token, err := jwt.Encode(p)
-	if err != nil {
-		fmt.Printf("%s", err.Error())
-	}
-	fmt.Printf("%s\n", token)
-
-	m := new(Model)
-	if jwt.Decode(m, token) != nil {
-		fmt.Printf("%s", err.Error())
-	}
-	fmt.Printf("model\t%v\n", m)
-
-	ok, err := jwt.Validate(m, token)
-	if err != nil {
-		fmt.Printf("%s", err.Error())
-	}
-
-	fmt.Printf("result\t%v\n", ok)
 }
