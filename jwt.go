@@ -117,14 +117,14 @@ func (j *JWT) Decode(payload interface{}, token string) error {
 /**
  * Validate payload data
  */
-func (j *JWT) Validate(payload interface{}, token string) (bool, error) {
-	enc_p, err := j.Encode(payload)
-	if err != nil {
-		return false, err
-	}
+func (j *JWT) Validate(token string) (bool, error) {
+	segs := strings.Split(token, ".")
 
-	mac1 := []byte(strings.Split(enc_p, ".")[2])
-	mac2 := []byte(strings.Split(token, ".")[2])
+	sign := hmac.New(sha256.New, j.Key)
+	sign.Write([]byte(strings.Join(segs[:2], ".")))
+
+	mac1 := []byte(segs[2])
+	mac2 = []byte(base64.StdEncoding.EncodeToString(sign.Sum(nil)))
 
 	if !hmac.Equal(mac1, mac2) {
 		return false, nil

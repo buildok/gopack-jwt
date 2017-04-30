@@ -41,7 +41,7 @@ func main() {
 	fmt.Printf("claims:\t%#v\n", jwt.Claims)
 
 	// validate
-	ok, _ := jwt.Validate(m, token)
+	ok, _ := jwt.Validate(token)
 	fmt.Printf("result:\t%v\n", ok)
 }
 
