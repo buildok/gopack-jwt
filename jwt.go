@@ -124,7 +124,7 @@ func (j *JWT) Validate(token string) (bool, error) {
 	sign.Write([]byte(strings.Join(segs[:2], ".")))
 
 	mac1 := []byte(segs[2])
-	mac2 = []byte(base64.StdEncoding.EncodeToString(sign.Sum(nil)))
+	mac2 := []byte(base64.StdEncoding.EncodeToString(sign.Sum(nil)))
 
 	if !hmac.Equal(mac1, mac2) {
 		return false, nil
