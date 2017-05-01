@@ -3,7 +3,7 @@ Golang package for JWT encode/decode
 
 
 ```bash
-go get github.com/buildok/jwt
+go get github.com/buildok/gopack-jwt
 ```
 
 main.go
@@ -12,7 +12,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/buildok/jwt"
+	jwt "github.com/buildok/gopack-jwt"
 )
 
 type Model struct {
